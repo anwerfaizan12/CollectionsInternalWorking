@@ -1,0 +1,121 @@
+	 								*********** Stack Internal Working ************
+
+1. Internal Structure
+Stack internally maintains elements in an array.
+
+For example:
+Stack<Integer> stack = new Stack<>();
+stack.push(10);
+stack.push(20);
+stack.push(30);
+
+Internally, the array looks like this:
+Stack elements -   10             20           30
+                 Index 0       Index 1       Index 2
+
+The last inserted element is at the highest occupied index.
+
+
+
+2. Internal Working of push()
+push() adds an element to the top of the Stack.
+
+Example:  stack.push(40);
+Internally, Stack's push() method works approximately like this:
+public E push(E item) {
+    addElement(item);
+    return item;
+}
+
+Explanation:
+. push() receives an element.
+. It calls addElement() inherited from Vector.
+. Vector adds the element at the end of its internal array.
+. The element becomes the new top element.
+Time complexity: O(1) amortized.
+
+
+
+
+3. Internal Working of pop()
+pop() removes and returns the top element.
+
+stack.pop();
+Suppose the Stack contains: [10, 20, 30]
+It removes 30 and returns it.
+Internally, the implementation is approximately:
+
+public E pop() {
+    E obj;
+    int len = size();
+    obj = peek();
+    removeElementAt(len - 1);
+    return obj;
+}
+
+Explanation:
+. It gets the current Stack size.
+. It calls peek() to retrieve the top element.
+. It removes the last element using removeElementAt().
+. It returns the removed element.
+Time complexity: O(1).
+
+
+
+4. Internal Working of peek()
+peek() returns the top element without removing it.
+
+stack.peek();
+
+Internal implementation:
+public E peek() {
+    int len = size();
+    if (len == 0)
+        throw new EmptyStackException();
+    return elementAt(len - 1);
+}
+
+Explanation:
+. It checks whether Stack is empty.
+. It calculates the last occupied index.
+. It returns the element at that index.
+. It does not remove the element.
+Time complexity: O(1).
+
+
+
+5. Internal Working of empty()
+Checks whether the Stack contains any elements.
+
+stack.empty();
+Internal implementation:
+public boolean empty() {
+    return size() == 0;
+}
+
+Time complexity: O(1).
+
+
+6. Internal Working of search()
+Searches for an element and returns its position from the top.
+
+stack.search(20);
+Suppose: [10, 20, 30]
+
+Internal implementation:
+public int search(Object o) {
+    int i = lastIndexOf(o);
+    if (i >= 0) {
+        return size() - i;
+    }
+    return -1;
+}
+
+Time complexity: O(n).
+
+
+
+
+
+
+

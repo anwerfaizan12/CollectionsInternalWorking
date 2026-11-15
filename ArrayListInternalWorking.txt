@@ -1,0 +1,321 @@
+					( INTERNAL WORKING OF ARRAYLIST )
+
+
+1. ArrayList uses a dynamic array
+- ArrayList is a class in the Java Collections Framework.
+- It implements the List interface.
+- Internally, it uses an array of type Object[] to store elements.
+- It is called a dynamic array because its capacity can grow automatically.
+
+ArrayList<Integer> list = new ArrayList<>();
+
+Internally, it maintains:
+transient Object[] elementData;                        // Java does not want the internal array to be serialized using the default serialization mechanism.          
+private int size;
+
+elementData stores elements.
+size stores the number of elements present.
+
+
+2. Default capacity and initialization
+When we create an ArrayList: ArrayList<Integer> list = new ArrayList<>();
+The default constructor does not immediately allocate an array of size 10 in modern Java.
+It initially uses a shared empty array.
+When the first element is added, it allocates an array with a default capacity of 10.
+
+Initially
+Size = 0, Capacity = 0(size of arr is 0 but the logical capacity is 10)
+No element array allocated yet (modern OpenJDK).
+
+After first add()
+Size = 1, Capacity = 10(Now, the arr has been created with size 10)
+
+
+
+3. Difference between size and capacity
+This is a very important interview concept.
+- Size = Number of elements actually stored.
+- Capacity = Total number of elements the internal array can hold.
+
+Example:
+ArrayList<Integer> list = new ArrayList<>(5);
+list.add(10);
+list.add(20);
+list.add(30);
+
+Now:
+- Size = 3
+- Capacity = 5
+The array has space for two more elements without resizing.
+
+
+
+
+4. How add() works internally
+Consider:
+list.add(10);
+list.add(20);
+list.add(30);
+
+Internally, the following happens:
+1. ArrayList checks whether sufficient capacity is available.
+2. If capacity is available, it inserts the element into the internal array.
+3. It increments the size by one.
+4. If capacity is insufficient, it triggers resizing.
+
+
+
+5. How resizing works internally
+Suppose:
+ArrayList<Integer> list = new ArrayList<>(3);
+list.add(10);
+list.add(20);
+list.add(30);
+
+Now size = 3 and capacity = 3.
+When we execute: list.add(40);
+
+The following happens:
+1. ArrayList checks available capacity.
+2. It finds that the array is full.
+3. It calculates a new capacity.
+4. It creates a new, larger array.
+5. It copies existing elements into the new array.
+6. It inserts the new element.
+
+
+
+
+6. How get() works internally
+Example:   list.get(2);
+What happens?
+1. ArrayList checks whether the index is valid.
+2. It directly accesses the element at that index in the internal array.
+3. It returns the element.
+
+
+7. How remove() works internally
+Suppose the ArrayList contains: [10, 20, 30, 40, 50]
+we execute: list.remove(1);
+
+What happens?
+1. ArrayList retrieves the element at index 1.
+2. It removes that element.
+3. It shifts all subsequent elements one position to the left.
+4. It decreases the size by one.
+5. It sets the last unused position to null.
+
+
+
+8. How add(index, element) works
+Suppose: [10, 20, 30, 40]
+we execute: list.add(1, 15);
+
+What happens?
+1. ArrayList checks the index and available capacity.
+2. It shifts existing elements from index 1 onwards to the right.
+3. It inserts 15 at index 1.
+4. It increments size.
+
+
+
+
+*** How add() method works internally?
+Ans -> 
+1. Create an ArrayList
+ArrayList<Integer> list = new ArrayList<>();
+
+Internally, the default constructor is called:
+public ArrayList() {
+    this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
+}
+
+The variables are:
+transient Object[] elementData;
+private static final Object[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = {};
+private int size;
+
+
+2. Call the add() method
+Now execute:
+list.add(10);
+The actual add() method:
+
+public boolean add(E e) {
+    ensureCapacityInternal(size + 1);
+    elementData[size++] = e;
+    return true;
+}
+
+There are two important operations here:
+. ensureCapacityInternal() checks whether the internal array has enough capacity.
+. elementData[size++] = e inserts the element.
+
+Let's understand the first operation.
+
+3. ensureCapacityInternal()
+private void ensureCapacityInternal(int minCapacity) {
+    ensureExplicitCapacity(calculateCapacity(elementData, minCapacity));
+}
+
+Here, minCapacity means the minimum capacity required to store the new element.
+Since the current size is 0:
+
+ensureCapacityInternal(1);
+This method calls two methods:
+- calculateCapacity()
+- ensureExplicitCapacity()
+
+
+4. calculateCapacity()
+
+private static int calculateCapacity(
+        Object[] elementData, int minCapacity) {
+
+    if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {                          // It checks whether the internal array is still the special empty array assigned by the default constructor.
+        return Math.max(DEFAULT_CAPACITY, minCapacity);
+    }
+
+    return minCapacity;
+}
+
+Let's understand:
+- elementData is currently the empty default array.
+- Therefore, the if condition is true.
+- DEFAULT_CAPACITY = 10.
+- minCapacity = 1.
+
+So:
+Math.max(10, 1);
+Returns 10.
+Therefore, the required capacity becomes 10.
+Now 10 is passed to ensureExplicitCapacity().
+
+
+5. ensureExplicitCapacity()
+private void ensureExplicitCapacity(int minCapacity) {
+    modCount++;
+    if (minCapacity - elementData.length > 0)
+        grow(minCapacity);
+}
+
+Let's understand:
+- minCapacity = 10.
+- elementData.length = 0.
+Therefore:
+10 - 0 > 0
+The condition is true.
+So Java calls:
+grow(10);
+
+
+
+
+
+
+*** How the list grows dynamically?
+Ans - ArrayList internally uses an Object array to store elements. Whenever we call add(), it checks whether sufficient capacity is available.
+If the array is full, it calls the grow() method, which creates a new array with approximately 50% more capacity. 
+Existing elements are copied into the new array using Arrays.copyOf(), and then the new element is inserted.
+
+int oldCapacity = elementData.length;
+int newCapacity = oldCapacity + (oldCapacity >> 1);
+elementData = Arrays.copyOf(elementData, newCapacity);
+list.add(11);          // inserting new element
+
+
+
+*** What is modCount?
+Ans - 
+In ArrayList, it is declared as:
+protected transient int modCount = 0;
+It tracks structural modifications such as:
+- Adding elements.
+- Removing elements.
+- Other operations that change the list's structure.
+
+e.g - 
+private void ensureExplicitCapacity(int minCapacity) {
+    modCount++;
+    if (minCapacity - elementData.length > 0)
+        grow(minCapacity);
+} 
+
+
+
+
+*** How remove(index) works internally?
+Ans -> 
+ArrayList first checks whether the given index is valid. Then it retrieves the element and calls fastRemove(). 
+This method uses System.arraycopy() to shift the remaining elements one position to the left. Finally, 
+it decreases the size, sets the last position to null to avoid memory leaks, and returns the removed element.
+
+
+
+Step 1. remove() method is called
+A simplified version of the internal implementation:
+public E remove(int index) {
+    // Check whether index is valid
+    Objects.checkIndex(index, size);
+    E oldValue = elementData(index);
+    fastRemove(index);
+    return oldValue;
+}
+
+Here, three things happen:
+- Objects.checkIndex() checks whether the given index is valid.
+- elementData(index) retrieves the element at that index.
+- fastRemove(index) performs the actual removal.
+
+
+Step 2. fastRemove()
+This method performs the actual removal.
+In older Java implementations, it looks like this:
+
+private void fastRemove(int index) {
+    modCount++;
+    int numMoved = size - index - 1;
+    if (numMoved > 0) {
+        System.arraycopy(
+            elementData,
+            index + 1,
+            elementData,
+            index,
+            numMoved
+        );
+    }
+    elementData[--size] = null;
+}
+
+
+Step 3. Understand numMoved
+int numMoved = size - index - 1;    // number of elements to be shifted which are actually the elements after that index.
+
+
+Step 4. System.arraycopy() ->
+System.arraycopy(
+    elementData,
+    index + 1,
+    elementData,
+    index,
+    numMoved
+);
+This method copies elements from one position to another.
+
+Its parameters are:
+System.arraycopy(source, sourcePosition,
+                 destination, destinationPosition,
+                 numberOfElements);
+
+
+
+*** How does get() work internally in ArrayList?
+Ans - get() first checks whether the given index is within the valid range. 
+Then it directly accesses the internal elementData array using that index and returns the element. 
+Since array access takes constant time, the time complexity of get() is O(1).
+
+
+*** How does set() work internally in ArrayList?
+Ans - set() first checks whether the given index is valid. 
+Then it retrieves the old element from the internal elementData array, replaces it with the new element at the same index, and returns the old element. 
+Since it directly accesses the array, its time complexity is O(1

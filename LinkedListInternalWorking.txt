@@ -1,0 +1,155 @@
+						**************** LinkedList Internal Working *****************
+
+1. Internal structure of LinkedList
+Each node contains three things:
+1. Previous node reference (prev)
+2. Actual data (item)
+3. Next node reference (next)
+
+For example:
+LinkedList<Integer> list = new LinkedList<>();
+list.add(10);
+list.add(20);
+list.add(30);
+
+Internally, it looks like:
+null <- [10] <-> [20] <-> [30] -> null
+         ↑                  ↑
+        first              last
+
+
+
+
+2. Internal Node class
+Conceptually, Java uses a Node class similar to this:
+
+private static class Node<E> {
+    E item;
+    Node<E> next;
+    Node<E> prev;
+
+    Node(Node<E> prev, E element, Node<E> next) {
+        this.item = element;
+        this.next = next;
+        this.prev = prev;
+    }
+}
+
+
+
+3. Important variables in LinkedList
+The actual implementation maintains these important variables:
+
+transient int size = 0;
+transient Node<E> first;
+transient Node<E> last;
+
+Variable	Purpose
+size	Stores the number of elements
+first	Points to the first node
+last	Points to the last node
+
+
+
+4. How add() works internally
+Consider:
+LinkedList<Integer> list = new LinkedList<>();
+list.add(10);
+list.add(20);
+list.add(30);
+
+The add() method internally calls linkLast().
+
+Simplified implementation:
+void linkLast(E e) {
+    final Node<E> l = last;
+    final Node<E> newNode =
+        new Node<>(l, e, null);
+    last = newNode;
+    if (l == null)
+        first = newNode;
+    else
+        l.next = newNode;
+    size++;
+}
+
+
+
+5. How get(index) works internally
+Example:list.get(1);
+
+Internally, LinkedList uses the node(index) method.
+
+Simplified implementation:
+Node<E> node(int index) {
+    if (index < (size >> 1)) {                                         // if index is smaller than size/2 then search in first half and start from first Node
+        Node<E> x = first;
+        for (int i = 0; i < index; i++)
+            x = x.next;
+        return x;
+    }
+
+    else {                                                            // if index is greater than or equal to size/2 then search in second half and start from the last Node
+        Node<E> x = last;
+        for (int i = size - 1; i > index; i--)
+            x = x.prev;
+        return x;
+    }
+}
+
+
+
+
+
+6. How remove() works internally
+Example: list.remove(1);
+
+Internally:
+. Find the node at index.
+. Get its previous and next nodes.
+. Connect the previous node directly to the next node.
+. Disconnect the removed node.
+. Decrease size.
+
+
+Simplified implementation:
+E unlink(Node<E> x) {
+
+    E element = x.item;
+
+    Node<E> next = x.next;
+    Node<E> prev = x.prev;
+
+    if (prev == null)
+        first = next;
+    else
+        prev.next = next;
+
+    if (next == null)
+        last = prev;
+    else
+        next.prev = prev;
+
+    x.item = null;
+    x.next = null;
+    x.prev = null;
+
+    size--;
+
+    return element;
+}
+
+****
+Method	Internal method to understand
+add()	linkLast()
+addFirst()	linkFirst()
+addLast()	linkLast()
+get()	node()
+remove()	unlink()
+removeFirst()	unlinkFirst()
+removeLast()	unlinkLast()
+
+
+Q. Why does LinkedList use a doubly linked list?
+Ans - Java's LinkedList uses a Doubly Linked List because it allows traversal in both directions and makes insertion and deletion easier
+ when the target node is already available.
